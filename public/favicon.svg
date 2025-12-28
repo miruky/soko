@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
+  <style>
+    .frame { stroke: #221f1c; }
+    @media (prefers-color-scheme: dark) {
+      .frame { stroke: #ededea; }
+    }
+  </style>
+  <rect class="frame" x="7" y="7" width="50" height="50" rx="12" fill="none" stroke-width="4" />
+  <rect x="20" y="20" width="24" height="24" rx="5" fill="#cf8b3f" />
+  <path d="M25 26h14M25 38h14" stroke="#7a4e1d" stroke-width="2.6" stroke-linecap="round" />
+</svg>
