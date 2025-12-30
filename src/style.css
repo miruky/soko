@@ -1,53 +1,74 @@
+/*
+ * 配色とタイポの土台。テーマは data-theme(light/dark)で切り替え、
+ * メディアクエリは描画前の head スクリプトが解決して載せ替える(無FOUC)。
+ * 箱+影の羅列を避け、罫線(1px)と余白でセクションを分ける。
+ */
+
 :root {
-  --bg: #f4f3f0;
-  --surface: #fffefb;
-  --surface-2: #eceae5;
-  --ink: #221f1c;
-  --muted: #6a675f;
-  --line: #e2dfd8;
-  --accent: #bd7329;
-  --accent-soft: rgba(189, 115, 41, 0.12);
-  --floor: #efece6;
-  --floor-line: rgba(40, 36, 30, 0.05);
-  --wall: #d6cfc2;
-  --wall-edge: rgba(255, 255, 255, 0.7);
-  --crate: #cf8b3f;
-  --crate-edge: #9a6020;
-  --player: #3f6ea0;
-  --player-face: #fbfdff;
-  --goal: #2c9c7d;
-  --goal-soft: rgba(44, 156, 125, 0.18);
-  --shadow: 0 1px 2px rgba(32, 28, 22, 0.05), 0 10px 30px rgba(32, 28, 22, 0.07);
-  --radius: 14px;
+  --font-sans: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  --font-serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+
+  /* 温度のある中立色 + アクセント1色(倉庫の木箱の琥珀)。純白純黒は避ける。 */
+  --bg: #f4f1ea;
+  --surface: #faf7f1;
+  --surface-2: #ebe5d9;
+  --ink: #211d17;
+  --ink-soft: #423c33;
+  --muted: #716b5f;
+  --line: #e3ddd0;
+  --line-strong: #d3ccba;
+  --accent: #b06a2c;
+  --accent-ink: #8c5320;
+  --accent-soft: rgba(176, 106, 44, 0.1);
+
+  /* 盤面の素材色 */
+  --floor: #ece6da;
+  --floor-line: rgba(40, 34, 24, 0.05);
+  --wall: #d7cdb9;
+  --wall-edge: rgba(255, 255, 255, 0.65);
+  --crate: #c5803a;
+  --crate-edge: #8f561f;
+  --player: #3c6b9c;
+  --player-face: #fbfcff;
+  --goal: #2f9376;
+  --goal-ink: #237a5f;
+  --goal-soft: rgba(47, 147, 118, 0.16);
+
+  --radius: 12px;
+  --radius-sm: 9px;
   --move-dur: 130ms;
-  --logo-accent: #cf8b3f;
-  --logo-ink: #221f1c;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --logo-accent: #c5803a;
+  --logo-ink: #211d17;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #131210;
-    --surface: #1c1b18;
-    --surface-2: #262420;
-    --ink: #ededea;
-    --muted: #99948a;
-    --line: #322e28;
-    --accent: #df9a4c;
-    --accent-soft: rgba(223, 154, 76, 0.16);
-    --floor: #1a1815;
-    --floor-line: rgba(255, 250, 240, 0.04);
-    --wall: #3a352d;
-    --wall-edge: rgba(255, 255, 255, 0.08);
-    --crate: #c9853c;
-    --crate-edge: #5f3d16;
-    --player: #5d9bd0;
-    --player-face: #0c1116;
-    --goal: #45c49d;
-    --goal-soft: rgba(69, 196, 157, 0.2);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.3);
-    --logo-accent: #df9a4c;
-    --logo-ink: #ededea;
-  }
+:root[data-theme='dark'] {
+  --bg: #14110c;
+  --surface: #1b1711;
+  --surface-2: #241f17;
+  --ink: #ece6da;
+  --ink-soft: #c8c1b2;
+  --muted: #968f80;
+  --line: #2d2820;
+  --line-strong: #39332a;
+  --accent: #db9755;
+  --accent-ink: #e7ac72;
+  --accent-soft: rgba(219, 151, 85, 0.15);
+
+  --floor: #191510;
+  --floor-line: rgba(255, 248, 235, 0.04);
+  --wall: #38322a;
+  --wall-edge: rgba(255, 255, 255, 0.08);
+  --crate: #c5823c;
+  --crate-edge: #5b3a17;
+  --player: #5896cd;
+  --player-face: #0c1014;
+  --goal: #45bd97;
+  --goal-ink: #45bd97;
+  --goal-soft: rgba(69, 189, 151, 0.2);
+
+  --logo-accent: #db9755;
+  --logo-ink: #ece6da;
 }
 
 * {
@@ -60,44 +81,51 @@ html {
   color-scheme: light dark;
 }
 
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 body {
-  font-family: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--ink);
   line-height: 1.7;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 #app {
-  max-width: 1080px;
+  max-width: 1060px;
   margin: 0 auto;
-  padding: 32px 24px 32px;
+  padding: clamp(24px, 5vw, 56px) clamp(18px, 4vw, 32px);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(28px, 5vw, 44px);
   min-height: 100dvh;
 }
 
-/* ヘッダ */
+/* マストヘッド ------------------------------------------------ */
 
 .site-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  animation: rise 0.5s ease both;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  animation: rise 0.55s var(--ease) both;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .logo {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   color: var(--ink);
   flex-shrink: 0;
 }
@@ -108,67 +136,85 @@ body {
   display: block;
 }
 
+.kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
 .brand h1 {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.1;
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 6vw, 40px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 0.98;
+  color: var(--ink);
 }
 
 .tagline {
   color: var(--muted);
   font-size: 13px;
+  margin-top: 6px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .repo-link {
   color: var(--muted);
   text-decoration: none;
-  font-size: 13px;
-  border: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
   border-radius: 999px;
-  padding: 6px 16px;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: 50% 100%;
+  background-size: 0% 1px;
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    color 0.18s var(--ease),
+    background-size 0.25s var(--ease);
 }
 
 .repo-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: translateY(-1px);
+  color: var(--accent-ink);
+  background-size: 100% 1px;
 }
 
-/* レイアウト */
+/* レイアウト -------------------------------------------------- */
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(264px, 1fr);
+  gap: clamp(24px, 4vw, 40px);
   align-items: start;
-  animation: rise 0.5s ease 0.08s both;
+  animation: rise 0.55s var(--ease) 0.08s both;
 }
 
 .pane {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  background: transparent;
 }
 
 .board-pane {
   display: flex;
   flex-direction: column;
+  gap: 0;
 }
 
-/* ツールバー */
+/* ツールバー -------------------------------------------------- */
 
 .toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 14px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -177,9 +223,11 @@ body {
 }
 
 .level-name {
+  font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 15px;
-  padding: 0 6px;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  padding: 0 8px;
   white-space: nowrap;
 }
 
@@ -192,18 +240,18 @@ button {
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   border-color: var(--line);
-  background: var(--surface-2);
+  background: var(--surface);
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease,
-    color 0.15s ease,
-    transform 0.1s ease;
+    border-color 0.16s var(--ease),
+    background 0.16s var(--ease),
+    color 0.16s var(--ease),
+    transform 0.12s var(--ease);
 }
 
 .icon-btn svg {
@@ -213,27 +261,30 @@ button {
 
 .icon-btn:hover:not(:disabled) {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
   transform: translateY(-1px);
 }
 
+.icon-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.96);
+}
+
 .icon-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: default;
 }
 
-:is(button, a):focus-visible {
+:is(button, a, .ed-cell):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* 盤面 */
+/* 盤面 -------------------------------------------------------- */
 
 .board-wrap {
-  padding: 22px;
+  padding: clamp(16px, 3vw, 28px) 0 clamp(14px, 3vw, 24px);
   display: flex;
   justify-content: center;
-  background: radial-gradient(120% 90% at 50% 0%, var(--accent-soft), transparent 60%);
 }
 
 .board {
@@ -242,14 +293,14 @@ button {
   grid-template-columns: repeat(var(--cols, 8), var(--cell, 40px));
   grid-template-rows: repeat(var(--rows, 7), var(--cell, 40px));
   width: calc(var(--cell, 40px) * var(--cols, 8));
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   background-color: var(--floor);
   background-image:
     linear-gradient(var(--floor-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--floor-line) 1px, transparent 1px);
   background-size: var(--cell, 40px) var(--cell, 40px);
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .cell {
@@ -289,7 +340,7 @@ button {
   left: 0;
   width: var(--cell, 40px);
   height: var(--cell, 40px);
-  transition: transform var(--move-dur) ease;
+  transition: transform var(--move-dur) var(--ease);
   will-change: transform;
 }
 
@@ -301,7 +352,7 @@ button {
 
 .crate-body {
   fill: var(--crate);
-  transition: fill var(--move-dur) ease;
+  transition: fill var(--move-dur) var(--ease);
 }
 
 .crate-frame {
@@ -316,7 +367,7 @@ button {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0;
-  transition: opacity var(--move-dur) ease;
+  transition: opacity var(--move-dur) var(--ease);
 }
 
 .box.seated .crate-body {
@@ -339,7 +390,7 @@ button {
   fill: var(--player-face);
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform var(--move-dur) ease;
+  transition: transform var(--move-dur) var(--ease);
 }
 
 .no-anim .actor,
@@ -350,31 +401,31 @@ button {
 }
 
 .board.solved {
-  animation: pop 0.7s ease;
+  animation: pop 0.7s var(--ease);
 }
 
-/* D-pad */
+/* D-pad ------------------------------------------------------- */
 
 .dpad {
   display: grid;
-  grid-template-columns: repeat(3, 44px);
-  grid-template-rows: repeat(2, 44px);
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(2, 46px);
   gap: 6px;
   justify-content: center;
-  padding: 4px 0 14px;
+  padding: 6px 0 16px;
 }
 
 .dpad-btn {
   border: 1px solid var(--line);
-  background: var(--surface-2);
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
-  color: var(--ink);
+  color: var(--ink-soft);
   transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.1s ease;
+    border-color 0.16s var(--ease),
+    color 0.16s var(--ease),
+    transform 0.1s var(--ease);
 }
 
 .dpad-btn svg {
@@ -384,11 +435,11 @@ button {
 
 .dpad-btn:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .dpad-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
 }
 
 .dpad-btn.up {
@@ -411,13 +462,13 @@ button {
   grid-row: 2;
 }
 
-/* ステータス */
+/* ステータス -------------------------------------------------- */
 
 .statusbar {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 11px 16px;
+  align-items: baseline;
+  gap: 18px;
+  padding-top: 13px;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 13px;
@@ -425,68 +476,94 @@ button {
 }
 
 .statusbar .best {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .statusbar .msg {
   color: var(--ink);
   text-align: right;
+  transition: color 0.2s var(--ease);
 }
 
 .statusbar .msg.done {
-  color: var(--goal);
+  color: var(--goal-ink);
   font-weight: 600;
 }
 
-/* 側パネル */
+/* 側パネル ---------------------------------------------------- */
+
+.side-pane {
+  position: relative;
+}
+
+@media (min-width: 861px) {
+  .side-pane {
+    padding-left: clamp(20px, 3vw, 36px);
+    border-left: 1px solid var(--line);
+  }
+}
 
 .panel {
-  padding: 18px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .panel h2 {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .level-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+}
+
+.level-item {
+  border-top: 1px solid var(--line);
+}
+
+.level-item:last-child {
+  border-bottom: 1px solid var(--line);
 }
 
 .level-item button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   text-align: left;
-  padding: 9px 12px;
-  border-radius: 9px;
+  padding: 11px 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  transition: background 0.15s ease;
+  transition:
+    background 0.16s var(--ease),
+    padding-left 0.16s var(--ease);
 }
 
 .level-item button:hover {
   background: var(--surface-2);
+  padding-left: 12px;
 }
 
 .level-item.active button {
   background: var(--accent-soft);
-  border-color: var(--accent);
+}
+
+.level-item.active .lv-no {
+  color: var(--accent-ink);
 }
 
 .lv-no {
   width: 1.6em;
   color: var(--muted);
+  font-family: var(--font-serif);
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .lv-name {
@@ -498,8 +575,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--goal);
+  color: var(--goal-ink);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .lv-clear svg {
@@ -518,14 +596,15 @@ button.wide {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  font-size: 14px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-size: 13.5px;
   transition:
-    border-color 0.15s ease,
-    transform 0.1s ease;
+    border-color 0.16s var(--ease),
+    color 0.16s var(--ease),
+    transform 0.12s var(--ease);
 }
 
 button.wide svg {
@@ -535,26 +614,32 @@ button.wide svg {
 
 button.wide:hover {
   border-color: var(--accent);
+  color: var(--accent-ink);
   transform: translateY(-1px);
+}
+
+button.wide:active {
+  transform: translateY(0);
 }
 
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: #fff7ee;
 }
 
 button.primary:hover {
-  filter: brightness(1.07);
+  color: #fff7ee;
+  filter: brightness(1.06);
 }
 
 .note {
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.75;
 }
 
-/* パレット・サイズ */
+/* パレット・サイズ -------------------------------------------- */
 
 .palette {
   display: grid;
@@ -563,20 +648,21 @@ button.primary:hover {
 }
 
 .tool {
-  padding: 9px 4px;
-  border-radius: 9px;
+  padding: 10px 4px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line);
-  background: var(--surface-2);
+  background: var(--surface);
   font-size: 13px;
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    border-color 0.16s var(--ease),
+    background 0.16s var(--ease),
+    color 0.16s var(--ease);
 }
 
 .tool.active {
   background: var(--accent-soft);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .size-row {
@@ -592,7 +678,7 @@ button.primary:hover {
   height: 30px;
 }
 
-/* エディタ盤面 */
+/* エディタ盤面 ------------------------------------------------ */
 
 .editor-board {
   background-image: none;
@@ -602,7 +688,7 @@ button.primary:hover {
 
 .ed-cell {
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 3px;
   background-color: var(--floor);
   background-repeat: no-repeat;
   background-position: center;
@@ -644,12 +730,21 @@ button.primary:hover {
     );
 }
 
-/* アニメーション */
+/* フッタ ------------------------------------------------------ */
+
+.site-footer {
+  color: var(--muted);
+  font-size: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+/* アニメーション ---------------------------------------------- */
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -669,11 +764,15 @@ button.primary:hover {
   }
 }
 
-/* レスポンシブ */
+/* レスポンシブ ------------------------------------------------ */
 
 @media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .side-pane {
+    padding-top: 4px;
   }
 }
 

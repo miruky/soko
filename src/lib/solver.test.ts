@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { Game } from './game';
 import { cellOf, type Dir, type Level, parseLevel } from './level';
-import { deadSquares, solve } from './solver';
+import { deadSquares, solve, solveHint } from './solver';
 
 /** 解の方向列を実際に再生し、クリアできるか・不正手がないかを確かめる。 */
 function replay(level: Level, solution: readonly Dir[]): { solved: boolean; pushes: number } {
@@ -61,6 +61,31 @@ describe('solve', () => {
     const level = parseLevel(['#####', '#@$.#', '#####'].join('\n'));
     const result = solve(level, { maxStates: 0 });
     expect(result.status).toBe('gaveup');
+  });
+});
+
+describe('solveHint', () => {
+  it('最短解の最初の一歩を返す', () => {
+    const level = parseLevel(['########', '#.   $@#', '########'].join('\n'));
+    expect(solveHint(level)).toBe('left');
+  });
+
+  it('完成済みの盤面では手がないので null', () => {
+    const level = parseLevel(['####', '#@*#', '####'].join('\n'));
+    expect(solveHint(level)).toBeNull();
+  });
+
+  it('詰んだ盤面では null', () => {
+    const level = parseLevel(['#####', '#@  #', '#$ .#', '#####'].join('\n'));
+    expect(solveHint(level)).toBeNull();
+  });
+
+  it('ヒントの方向は最短解の先頭と一致する', () => {
+    const level = parseLevel(
+      ['######', '#@   #', '#    #', '# $  #', '#  . #', '######'].join('\n'),
+    );
+    const result = solve(level);
+    expect(solveHint(level)).toBe(result.solution[0]);
   });
 });
 

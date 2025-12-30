@@ -11,6 +11,7 @@ import {
   solve,
   step,
 } from './lib';
+import { modeIcon, modeLabel, ThemeController } from './theme';
 import { BoardView } from './ui/board';
 import { EditorView, type Tool } from './ui/editor';
 import { icon, type IconName } from './ui/icons';
@@ -45,6 +46,7 @@ const prefersReduced = (): boolean => window.matchMedia('(prefers-reduced-motion
 export class App {
   private readonly board = new BoardView();
   private readonly editor = new EditorView();
+  private readonly theme = new ThemeController();
 
   private level!: Level;
   private game!: Game;
@@ -64,6 +66,7 @@ export class App {
   private btnUndo!: HTMLButtonElement;
   private btnRedo!: HTMLButtonElement;
   private btnSolve!: HTMLButtonElement;
+  private btnTheme!: HTMLButtonElement;
 
   constructor(private readonly root: HTMLElement) {
     this.records = this.loadRecords();
@@ -81,6 +84,13 @@ export class App {
 
   private buildSkeleton(): void {
     const header = h('header', { class: 'site-header' });
+    this.btnTheme = h('button', {
+      class: 'icon-btn',
+      html: icon(modeIcon(this.theme.mode)),
+      aria: `配色テーマ: ${modeLabel(this.theme.mode)}(クリックで切り替え)`,
+      type: 'button',
+      onClick: () => this.cycleTheme(),
+    });
     header.append(
       h(
         'div',
@@ -89,15 +99,21 @@ export class App {
         h(
           'div',
           {},
+          h('span', { class: 'kicker', text: 'Sokoban' }),
           h('h1', { text: 'soko' }),
-          h('p', { class: 'tagline', text: '倉庫番 — 箱をすべてゴールへ' }),
+          h('p', { class: 'tagline', text: '箱をすべてゴールへ押し込む' }),
         ),
       ),
-      h('a', {
-        class: 'repo-link',
-        text: 'GitHub',
-        attrs: { href: 'https://github.com/miruky/soko', target: '_blank', rel: 'noopener' },
-      }),
+      h(
+        'div',
+        { class: 'header-actions' },
+        this.btnTheme,
+        h('a', {
+          class: 'repo-link',
+          text: 'GitHub',
+          attrs: { href: 'https://github.com/miruky/soko', target: '_blank', rel: 'noopener' },
+        }),
+      ),
     );
 
     const toolbar = h('div', { class: 'toolbar' });
@@ -577,6 +593,14 @@ export class App {
   private clearMessage(): void {
     this.elMsg.textContent = '';
     this.elMsg.className = 'msg';
+  }
+
+  // --- テーマ ---
+
+  private cycleTheme(): void {
+    const mode = this.theme.cycle();
+    this.btnTheme.innerHTML = icon(modeIcon(mode));
+    this.btnTheme.setAttribute('aria-label', `配色テーマ: ${modeLabel(mode)}(クリックで切り替え)`);
   }
 
   // --- 進捗保存 ---
