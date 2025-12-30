@@ -8,9 +8,24 @@
       content="ブラウザで遊ぶ倉庫番。箱をすべてゴールへ押し込む。最短手の自動探索とレベルエディタつきで、作った盤面はURLで共有できる"
     />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#bd7329" />
+    <meta name="theme-color" content="#b06a2c" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>soko | 倉庫番パズル</title>
+    <script>
+      // 描画前に保存テーマを解決して data-theme を載せ、初回のちらつきを防ぐ。
+      (function () {
+        try {
+          var raw = localStorage.getItem('soko:theme');
+          var mode = raw === 'light' || raw === 'dark' || raw === 'auto' ? raw : 'auto';
+          var dark =
+            mode === 'dark' ||
+            (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          /* localStorage 不可の環境は既定(ライト)で描く */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
