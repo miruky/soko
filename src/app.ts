@@ -9,6 +9,7 @@ import {
   levelToCode,
   parseLevel,
   solve,
+  solveHint,
   step,
 } from './lib';
 import { modeIcon, modeLabel, ThemeController } from './theme';
@@ -59,6 +60,7 @@ export class App {
   private elName!: HTMLElement;
   private elMoves!: HTMLElement;
   private elPushes!: HTMLElement;
+  private elPar!: HTMLElement;
   private elBest!: HTMLElement;
   private elMsg!: HTMLElement;
   private boardWrap!: HTMLElement;
@@ -67,6 +69,10 @@ export class App {
   private btnRedo!: HTMLButtonElement;
   private btnSolve!: HTMLButtonElement;
   private btnTheme!: HTMLButtonElement;
+  private dpadBtns!: Record<Dir, HTMLButtonElement>;
+  private helpDialog?: HTMLDialogElement;
+  /** レベルごとの理論最少押し回数。null は探索で解けなかったことを表す。 */
+  private readonly parCache = new Map<string, number | null>();
 
   constructor(private readonly root: HTMLElement) {
     this.records = this.loadRecords();
@@ -107,6 +113,13 @@ export class App {
       h(
         'div',
         { class: 'header-actions' },
+        h('button', {
+          class: 'icon-btn',
+          html: icon('help'),
+          aria: '操作の一覧 (?)',
+          type: 'button',
+          onClick: () => this.openHelp(),
+        }),
         this.btnTheme,
         h('a', {
           class: 'repo-link',
@@ -122,6 +135,7 @@ export class App {
     this.elName = h('span', { class: 'level-name' });
     this.btnUndo = iconBtn('undo', '元に戻す (z)', () => this.undo());
     this.btnRedo = iconBtn('redo', 'やり直す (x)', () => this.redo());
+    const btnHint = iconBtn('hint', '次の一手のヒント (h)', () => this.hint());
     this.btnSolve = iconBtn('solve', '最短手で解く', () => this.toggleSolve());
     toolbar.append(
       prev,
@@ -131,6 +145,7 @@ export class App {
       iconBtn('reset', '最初から (r)', () => this.reset()),
       this.btnUndo,
       this.btnRedo,
+      btnHint,
       this.btnSolve,
     );
 
@@ -140,13 +155,15 @@ export class App {
 
     this.elMoves = h('span', {});
     this.elPushes = h('span', {});
+    this.elPar = h('span', { class: 'par' });
     this.elBest = h('span', { class: 'best' });
-    this.elMsg = h('span', { class: 'msg' });
+    this.elMsg = h('span', { class: 'msg', attrs: { 'aria-live': 'polite', role: 'status' } });
     const status = h(
       'div',
       { class: 'statusbar' },
       this.elMoves,
       this.elPushes,
+      this.elPar,
       this.elBest,
       h('span', { class: 'spacer' }),
       this.elMsg,
@@ -168,11 +185,59 @@ export class App {
       text: '矢印キーまたはWASDで移動。箱の向こうが空いていれば押せる。',
     });
 
-    this.root.replaceChildren(header, layout, footer);
+    this.helpDialog = this.buildHelp();
+    this.root.replaceChildren(header, layout, footer, this.helpDialog);
+  }
+
+  private buildHelp(): HTMLDialogElement {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'help-dialog';
+
+    const shortcuts: [string, string][] = [
+      ['矢印 / WASD', '上下左右に動く。前方の箱は向こうが空いていれば押せる'],
+      ['Z', '1手戻す'],
+      ['X', 'やり直す'],
+      ['R', '最初からやり直す'],
+      ['H', '次の一手のヒントを光らせる'],
+      ['?', 'この一覧を開く'],
+    ];
+    const list = h('dl', { class: 'shortcut-list' });
+    for (const [keys, desc] of shortcuts) {
+      const keyEls: (Node | string)[] = [];
+      keys.split(' / ').forEach((k, i) => {
+        if (i) keyEls.push(' / ');
+        keyEls.push(kbd(k));
+      });
+      list.append(h('dt', {}, ...keyEls), h('dd', { text: desc }));
+    }
+
+    const close = h('button', {
+      class: 'wide',
+      type: 'button',
+      text: '閉じる',
+      onClick: () => dlg.close(),
+    });
+
+    dlg.append(
+      h('h2', { class: 'help-title', text: '操作' }),
+      list,
+      h('p', { class: 'note', text: '詰まったらヒント(H)で次の一手、ツールバーの探索で最短手の再生。' }),
+      h('div', { class: 'help-foot' }, close),
+    );
+    // 背景(バックドロップ)クリックで閉じる。
+    dlg.addEventListener('click', (event) => {
+      if (event.target === dlg) dlg.close();
+    });
+    return dlg;
+  }
+
+  private openHelp(): void {
+    this.helpDialog?.showModal();
   }
 
   private buildDpad(): HTMLElement {
     const dpad = h('div', { class: 'dpad' });
+    this.dpadBtns = {} as Record<Dir, HTMLButtonElement>;
     const mk = (dir: Dir, area: string): HTMLElement => {
       const b = h('button', {
         class: `dpad-btn ${area}`,
@@ -181,6 +246,7 @@ export class App {
         type: 'button',
         onClick: () => this.doMove(dir),
       });
+      this.dpadBtns[dir] = b;
       return b;
     };
     dpad.append(mk('up', 'up'), mk('left', 'left'), mk('down', 'down'), mk('right', 'right'));
@@ -240,9 +306,17 @@ export class App {
   // --- プレイ操作 ---
 
   private onKey = (event: KeyboardEvent): void => {
-    if (this.mode !== 'play') return;
     const target = event.target;
     if (target instanceof HTMLElement && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+
+    // 操作一覧はプレイ中・編集中どちらでも開ける。
+    if (event.key === '?') {
+      event.preventDefault();
+      this.openHelp();
+      return;
+    }
+    if (this.mode !== 'play') return;
+    if (this.helpDialog?.open) return;
 
     const dir = MOVE_KEYS[event.key];
     if (dir) {
@@ -253,6 +327,7 @@ export class App {
     if (event.key === 'z') this.undo();
     else if (event.key === 'x') this.redo();
     else if (event.key === 'r') this.reset();
+    else if (event.key === 'h') this.hint();
   };
 
   private doMove(dir: Dir): void {
@@ -575,14 +650,32 @@ export class App {
   private updateStatus(): void {
     this.elMoves.textContent = `手数 ${this.game.moves}`;
     this.elPushes.textContent = `押し ${this.game.pushes}`;
+    const par = this.currentPar();
+    this.elPar.textContent = par !== null ? `最少 ${par}押し` : '';
     if (this.source.kind === 'builtin') {
       const rec = this.records[BUILTIN_LEVELS[this.source.index]!.id];
-      this.elBest.textContent = rec?.solved ? `自己最少 ${rec.bestPushes}押し` : '';
+      this.elBest.textContent = rec?.solved ? `自己 ${rec.bestPushes}押し` : '';
+      this.elBest.classList.toggle('ace', rec?.solved === true && par !== null && rec.bestPushes <= par);
     } else {
       this.elBest.textContent = '';
+      this.elBest.classList.remove('ace');
     }
     this.btnUndo.disabled = this.playing || !this.game.canUndo;
     this.btnRedo.disabled = this.playing || !this.game.canRedo;
+  }
+
+  /** 現在のレベルの理論最少押し回数。初期配置から1度だけ解いて覚える。 */
+  private currentPar(): number | null {
+    const key =
+      this.source.kind === 'builtin'
+        ? `p:${BUILTIN_LEVELS[this.source.index]!.id}`
+        : `d:${levelToCode(this.level)}`;
+    const cached = this.parCache.get(key);
+    if (cached !== undefined) return cached;
+    const result = solve(this.level);
+    const par = result.status === 'solved' ? result.pushes : null;
+    this.parCache.set(key, par);
+    return par;
   }
 
   private setMessage(text: string, kind = ''): void {
@@ -593,6 +686,31 @@ export class App {
   private clearMessage(): void {
     this.elMsg.textContent = '';
     this.elMsg.className = 'msg';
+  }
+
+  // --- ヒント ---
+
+  private hint(): void {
+    if (this.mode !== 'play' || this.playing) return;
+    if (this.game.isSolved()) {
+      this.setMessage('もう完成している', 'done');
+      return;
+    }
+    const state: Level = { ...this.level, player: this.game.player, boxes: [...this.game.boxes] };
+    const dir = solveHint(state);
+    if (!dir) {
+      this.setMessage('この配置からは解けない');
+      return;
+    }
+    this.pulseDpad(dir);
+    this.setMessage(`ヒント: ${dirLabel(dir)}へ`);
+  }
+
+  private pulseDpad(dir: Dir): void {
+    const btn = this.dpadBtns[dir];
+    btn.classList.remove('hint');
+    void btn.offsetWidth; // アニメーションを巻き戻して再生させる
+    btn.classList.add('hint');
   }
 
   // --- テーマ ---
@@ -662,6 +780,10 @@ function iconBtn(
 
 function dirLabel(dir: Dir): string {
   return { up: '上', down: '下', left: '左', right: '右' }[dir];
+}
+
+function kbd(label: string): HTMLElement {
+  return h('kbd', { class: 'kbd', text: label });
 }
 
 function delay(ms: number): Promise<void> {
