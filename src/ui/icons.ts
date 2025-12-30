@@ -16,7 +16,12 @@ export type IconName =
   | 'link'
   | 'prev'
   | 'next'
-  | 'shuffle';
+  | 'shuffle'
+  | 'auto'
+  | 'light'
+  | 'dark'
+  | 'hint'
+  | 'help';
 
 const PATHS: Record<IconName, string> = {
   // 上向きの矢印。D-padでは回転させて流用する。
@@ -35,6 +40,13 @@ const PATHS: Record<IconName, string> = {
   next: '<path d="M9 5l7 7-7 7"/>',
   shuffle:
     '<path d="M4 7h3l10 10h3"/><path d="M17 7h3M4 17h3l3-3"/><path d="M17 4l3 3-3 3M17 20l3-3-3-3"/>',
+  // 自動: OS設定に追従する意の半月。右半分を塗ってモード差を示す。
+  auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/>',
+  light:
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/>',
+  dark: '<path d="M20.5 14.6A8 8 0 0 1 9.4 3.5 7 7 0 1 0 20.5 14.6z"/>',
+  hint: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.4.9c0 1.8-2.6 2.4-2.6 4"/><path d="M12 17.4h.01"/>',
 };
 
 const ROTATION: Record<string, number> = { up: 0, right: 90, down: 180, left: 270 };
