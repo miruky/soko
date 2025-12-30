@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 470" role="img" aria-labelledby="arch-title arch-desc" font-family="'Hiragino Sans','Noto Sans JP',system-ui,sans-serif">
+  <title id="arch-title">sokoのアーキテクチャ</title>
+  <desc id="arch-desc">エントリのmain.tsがAppを起動し、Appが描画層(src/ui)と中核ロジック(src/lib)を仲介する。盤面はURLとlocalStorageに出入りする。</desc>
+  <style>
+    .panel { fill: none; stroke: #c9c4ba; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .node { fill: #fffefb; stroke: #d9d4ca; stroke-width: 1.5; }
+    .accent { fill: #fbf1e3; stroke: #bd7329; stroke-width: 1.5; }
+    .lbl { fill: #221f1c; font-size: 15px; font-weight: 600; }
+    .sub { fill: #6a675f; font-size: 12px; }
+    .tag { fill: #6a675f; font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+    .edge { stroke: #b1a89a; stroke-width: 1.6; fill: none; }
+    .edge-lbl { fill: #6a675f; font-size: 11px; }
+    @media (prefers-color-scheme: dark) {
+      .panel { stroke: #44403a; }
+      .node { fill: #1f1d1a; stroke: #3a352d; }
+      .accent { fill: #2a2118; stroke: #df9a4c; }
+      .lbl { fill: #ededea; }
+      .sub, .tag, .edge-lbl { fill: #99948a; }
+      .edge { stroke: #5a554c; }
+    }
+  </style>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#b1a89a" />
+    </marker>
+  </defs>
+
+  <!-- エントリ -->
+  <rect class="node" x="300" y="22" width="200" height="46" rx="11" />
+  <text class="lbl" x="400" y="44" text-anchor="middle">main.ts</text>
+  <text class="sub" x="400" y="61" text-anchor="middle">エントリ。#app にマウント</text>
+
+  <!-- App -->
+  <rect class="accent" x="284" y="96" width="232" height="60" rx="12" />
+  <text class="lbl" x="400" y="122" text-anchor="middle">App (app.ts)</text>
+  <text class="sub" x="400" y="140" text-anchor="middle">入力・解の再生・共有・進捗保存</text>
+
+  <!-- 永続/共有 -->
+  <rect class="node" x="60" y="103" width="150" height="46" rx="11" />
+  <text class="lbl" x="135" y="124" text-anchor="middle" font-size="13">URL #p= / #d=</text>
+  <text class="sub" x="135" y="140" text-anchor="middle">盤面を共有</text>
+
+  <rect class="node" x="590" y="103" width="150" height="46" rx="11" />
+  <text class="lbl" x="665" y="124" text-anchor="middle" font-size="13">localStorage</text>
+  <text class="sub" x="665" y="140" text-anchor="middle">クリア記録</text>
+
+  <!-- 描画層 -->
+  <rect class="panel" x="44" y="196" width="334" height="248" rx="14" />
+  <text class="tag" x="62" y="220">描画層 — src/ui</text>
+
+  <rect class="node" x="66" y="236" width="140" height="68" rx="11" />
+  <text class="lbl" x="136" y="266" text-anchor="middle" font-size="14">BoardView</text>
+  <text class="sub" x="136" y="285" text-anchor="middle">SVGタイル + 移動アニメ</text>
+
+  <rect class="node" x="218" y="236" width="140" height="68" rx="11" />
+  <text class="lbl" x="288" y="266" text-anchor="middle" font-size="14">EditorView</text>
+  <text class="sub" x="288" y="285" text-anchor="middle">2層モデルで盤面づくり</text>
+
+  <rect class="node" x="66" y="320" width="140" height="60" rx="11" />
+  <text class="lbl" x="136" y="347" text-anchor="middle" font-size="14">icons</text>
+  <text class="sub" x="136" y="365" text-anchor="middle">操作アイコン(SVG)</text>
+
+  <rect class="node" x="218" y="320" width="140" height="60" rx="11" />
+  <text class="lbl" x="288" y="347" text-anchor="middle" font-size="13">キーボード / D-pad</text>
+  <text class="sub" x="288" y="365" text-anchor="middle">移動入力</text>
+
+  <!-- 中核ロジック -->
+  <rect class="panel" x="422" y="196" width="334" height="248" rx="14" />
+  <text class="tag" x="440" y="220">中核ロジック — src/lib(テスト済み)</text>
+
+  <rect class="node" x="444" y="236" width="140" height="60" rx="11" />
+  <text class="lbl" x="514" y="262" text-anchor="middle" font-size="14">level</text>
+  <text class="sub" x="514" y="281" text-anchor="middle">XSB解析・共有コード</text>
+
+  <rect class="node" x="596" y="236" width="140" height="60" rx="11" />
+  <text class="lbl" x="666" y="262" text-anchor="middle" font-size="14">game</text>
+  <text class="sub" x="666" y="281" text-anchor="middle">移動・押し・undo/redo</text>
+
+  <rect class="node" x="444" y="312" width="140" height="68" rx="11" />
+  <text class="lbl" x="514" y="342" text-anchor="middle" font-size="14">solver</text>
+  <text class="sub" x="514" y="361" text-anchor="middle">押し最短BFS + 枝刈り</text>
+
+  <rect class="node" x="596" y="312" width="140" height="68" rx="11" />
+  <text class="lbl" x="666" y="342" text-anchor="middle" font-size="14">levels</text>
+  <text class="sub" x="666" y="361" text-anchor="middle">内蔵レベル(解ける保証)</text>
+
+  <!-- エッジ -->
+  <path class="edge" d="M400 68 L400 94" marker-end="url(#arr)" />
+  <path class="edge" d="M284 126 L212 126" marker-end="url(#arr)" />
+  <path class="edge" d="M516 126 L588 126" marker-end="url(#arr)" />
+  <path class="edge" d="M330 156 L240 194" marker-end="url(#arr)" />
+  <path class="edge" d="M470 156 L560 194" marker-end="url(#arr)" />
+  <path class="edge" d="M378 320 L422 320" marker-end="url(#arr)" />
+  <text class="edge-lbl" x="400" y="313" text-anchor="middle">解析・最短手</text>
+</svg>
