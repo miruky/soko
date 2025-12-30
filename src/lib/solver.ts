@@ -153,6 +153,16 @@ export function solve(level: Level, options: { maxStates?: number } = {}): Solve
   return { status: 'unsolvable', pushes: 0, moves: 0, solution: [], expanded };
 }
 
+/**
+ * 現在の配置から、最短解の最初の一歩(方向)を返す。詰みや解決済みなら null。
+ * ヒント表示に使う。盤面が大きすぎて探索を打ち切った場合も null を返す。
+ */
+export function solveHint(level: Level, options: { maxStates?: number } = {}): Dir | null {
+  const result = solve(level, options);
+  if (result.status !== 'solved') return null;
+  return result.solution[0] ?? null;
+}
+
 function finish(nodes: Node[], goalNode: Node, expanded: number): SolveResult {
   const segments: Dir[][] = [];
   let cur: Node | undefined = goalNode;
